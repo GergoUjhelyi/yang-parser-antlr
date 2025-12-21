@@ -26,6 +26,9 @@ pr_YangModule :
     pr_StatementSeparator
     pr_ModuleHeaderStatements
     pr_LinkageStatements
+    pr_MetaStatements
+    pr_RevisionStatements
+    pr_BodyStatements
     pr_EndChar
 ;
 
@@ -46,7 +49,30 @@ pr_ModuleHeaderStatements:
 ;
 
 pr_LinkageStatements:
-    (pr_ImportStatement)*
+    (pr_ImportStatement
+    |
+    pr_IncludeStatement)*
+;
+
+pr_MetaStatements:
+    (pr_OrganizationStatement
+    |
+    pr_ContactStatement
+    |
+    pr_DescriptionStatement
+    |
+    pr_ReferenceStatement
+    )+
+;
+
+pr_RevisionStatements:
+    (pr_RevisionStatement)*
+;
+
+pr_BodyStatements:
+    (
+    pr_ExtensionStatement
+    )*
 ;
 
 pr_YangVersionStatement:
@@ -97,6 +123,26 @@ pr_RevisionDateStatement: //TODO: returns statement
     pr_StatementEnd
 ;
 
+pr_RevisionStatement: //TODO: returns statement
+    REVISION
+    SEP?
+    d = pr_RevisionDate
+    OPTSEP?
+    (
+        SEMICOLON
+        |
+        (
+            pr_BeginChar
+            pr_StatementSeparator
+            (pr_DescriptionStatement
+            |
+            pr_ReferenceStatement
+            )+
+            pr_EndChar
+        )
+    )
+;
+
 pr_DescriptionStatement: //TODO: returns statement
     DESCRIPTION
     SEP?
@@ -111,17 +157,104 @@ pr_ReferenceStatement: //TODO: returns statement
     pr_StatementEnd
 ;
 
+pr_IncludeStatement: //TODO: returns statement
+    INCLUDE
+    SEP?
+    (pr_String | pr_Identifier)
+    OPTSEP?
+    (
+        SEMICOLON
+        |
+        pr_BeginChar pr_StatementSeparator
+        (
+            pr_RevisionDate
+            |
+            pr_DescriptionStatement
+            |
+            pr_ReferenceStatement
+        )+
+        pr_EndChar
+    )
+    pr_StatementSeparator
+    ;
+
+pr_OrganizationStatement: //TODO: returns statement
+    ORGANIZATION
+    SEP?
+    org = pr_String
+    pr_StatementEnd
+;
+
+pr_ContactStatement: //TODO: returns statement
+    CONTACT
+    SEP?
+    c = pr_String
+    pr_StatementEnd
+;
+
+pr_ExtensionStatement: //TODO: returns statement
+    EXTENSION
+    SEP?
+    pr_Identifier
+    OPTSEP?
+    (
+    SEMICOLON
+    |
+        (
+            pr_BeginChar
+            pr_StatementSeparator
+            (
+                pr_ArgumentStatement
+                |
+                //TODO: status statement
+                pr_DescriptionStatement
+                |
+                pr_ReferenceStatement
+            )+
+            pr_EndChar
+        )
+    ) pr_StatementSeparator
+;
+
+pr_ArgumentStatement: //TODO: returns statement
+    ARGUMENT
+    SEP?
+    (pr_Identifier | pr_String)
+    OPTSEP?
+    (
+        SEMICOLON
+    |
+        (
+            pr_BeginChar
+            pr_StatementSeparator
+            pr_YinElementStatement
+            pr_EndChar
+        )
+    )
+    pr_StatementSeparator
+;
+
+pr_YinElementStatement: //TODO: returns statement
+    YIN_ELEMENT
+    SEP?
+    pr_YinElementArguement
+    pr_StatementEnd
+;
+
+pr_YinElementArguement: //TODO: returns boolean
+    TRUE | FALSE;
+
 pr_UnknownStatement:
    prefix = pr_Identifier
    COLON
    i = pr_Identifier
    (SEP pr_Identifier)? //TODO: change pr_Identifier rule to pr_String
-   OPTSEP
+   OPTSEP?
          (
              SEMICOLON
-           | '{' OPTSEP
+           | pr_BeginChar OPTSEP
                  ((pr_YangStatement | pr_UnknownStatement) OPTSEP)*
-             '}'
+             pr_EndChar
          )
          pr_StatementSeparator
     ;

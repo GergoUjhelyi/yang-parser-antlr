@@ -100,7 +100,7 @@ lexer grammar YangLexer;
     IDENTIFIER: [A-Za-z_][A-Za-z0-9_.-]*;
     DOUBLE_QUOTE: '"';
     //YANG_CHAR: ~[\u0000-\u001F]; // placeholder: any non-control char TODO: revisit later
-    DOUBLE_QUOTE_STRING: DOUBLE_QUOTE ( '\\' . | ~["\\\r\n] )*? DOUBLE_QUOTE;
+    DOUBLE_QUOTE_STRING: DOUBLE_QUOTE ( '\\' . | ~["\\] )*? DOUBLE_QUOTE;
 
     BEGINCHAR: '{';
     ENDCHAR: '}';
