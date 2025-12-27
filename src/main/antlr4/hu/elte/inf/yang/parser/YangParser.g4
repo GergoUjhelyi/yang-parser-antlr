@@ -13,13 +13,15 @@ pr_YangFile:
     pr_YangModule?
     EOF;
 
-pr_YangModule :
+pr_YangModule returns[YangModule yangModule]:
     OPTSEP?
     pr_YangModuleKeyword
     OPTSEP?
     i = pr_Identifier {
-        YangModule yangModule = new YangModule();
-        yangModule.setModuleName($i.identifier);
+        if ($i.identifier != null && $i.identifier.isEmpty()) {
+            $yangModule = new YangModule();
+            $yangModule.setModuleName($i.identifier);
+        }
     }
     OPTSEP?
     pr_BeginChar
@@ -62,7 +64,7 @@ pr_MetaStatements:
     pr_DescriptionStatement
     |
     pr_ReferenceStatement
-    )+
+    )*
 ;
 
 pr_RevisionStatements:
@@ -157,6 +159,13 @@ pr_ReferenceStatement: //TODO: returns statement
     pr_StatementEnd
 ;
 
+pr_UnitsStatement: //TODO: returns statement
+    UNITS
+    SEP?
+    pr_String
+    pr_StatementEnd
+;
+
 pr_IncludeStatement: //TODO: returns statement
     INCLUDE
     SEP?
@@ -244,6 +253,34 @@ pr_YinElementStatement: //TODO: returns statement
 pr_YinElementArguement: //TODO: returns boolean
     TRUE | FALSE;
 
+pr_FeatureStatement: //TODO: returns statement
+    FEATURE
+    SEP?
+    feature_id = pr_Identifier
+    OPTSEP?
+    (SEMICOLON
+    |
+    (pr_BeginChar
+     pr_StatementSeparator
+     )
+     )
+;
+
+pr_StatusStatement:
+    STATUS
+    SEP?
+    s = pr_StatusArguement
+    pr_StatementEnd
+;
+
+pr_StatusArguement: //TODO: returns status
+    CURRENT
+    |
+    OBSOLETE
+    |
+    DEPRECATED
+;
+
 pr_UnknownStatement:
    prefix = pr_Identifier
    COLON
@@ -278,7 +315,6 @@ pr_StatementEnd:
     )
     pr_StatementSeparator;
 
-//pr_YangModuleId returns[String identifier]: //TODO: use identifier class
 
 pr_Identifier returns[String identifier]:
     IDENTIFIER
@@ -323,3 +359,58 @@ pr_RevisionDate returns[LocalDate revisonDate]:
             $revisonDate = LocalDate.parse(text);
         }
 };
+
+pr_ErrorMessageStatement: //TODO: returns statement
+    ERROR_MESSAGE
+    SEP?
+    m = pr_String
+    pr_StatementEnd
+;
+
+pr_ErrorAppTagStatement: //TODO: returns statement
+    ERROR_APP_TAG
+    SEP?
+    t = pr_String
+    pr_StatementEnd
+;
+
+// Ranges
+
+pr_RangeStatement:
+    RANGE
+    SEP?
+    pr_RangeArguement
+    OPTSEP?
+    (SEMICOLON
+        |
+        (pr_BeginChar
+        pr_StatementSeparator
+        (pr_ReferenceStatement | pr_DescriptionStatement | pr_ErrorMessageStatement | pr_ErrorAppTagStatement)*
+        pr_EndChar)
+    )
+;
+
+pr_RangeArguement:
+    pr_RangePart
+    (
+        OPTSEP?
+        VERTICAL_LINE
+        OPTSEP?
+        pr_RangePart
+    )*
+
+;
+
+pr_RangePart:
+    pr_RangeBoundary
+    (
+        OPTSEP?
+        RANGE_DOTS
+        OPTSEP?
+        pr_RangeBoundary
+    )?
+;
+
+pr_RangeBoundary:
+    MIN | MAX | INTEGER_VALUE | DECIMAL_VALUE
+;

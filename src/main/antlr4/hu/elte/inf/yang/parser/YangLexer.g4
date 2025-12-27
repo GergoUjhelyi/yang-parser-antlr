@@ -94,6 +94,12 @@ lexer grammar YangLexer;
     /*-------------------- Core rules from RFC 5234 --------------------*/
     fragment OPTSEP: (WS | SP)*;
     fragment SEP: (WS | SP)+;
+    INTEGER_VALUE: '-'? NON_NEGATIVE_INTEGER_VALUE;
+    fragment NON_NEGATIVE_INTEGER_VALUE: '0' | POSITIVE_INTEGER_VALUE;
+    fragment POSITIVE_INTEGER_VALUE: NON_ZERO_DIGIT DIGIT*;
+    ZERO_INTEGER_VALUE: DIGIT+;
+    fragment DECIMAL_VALUE: INTEGER_VALUE '.' ZERO_INTEGER_VALUE;
+    fragment NON_ZERO_DIGIT: [1-9];
     fragment DIGIT: [0-9];
     DATE_ARG: DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT;
 
@@ -106,6 +112,8 @@ lexer grammar YangLexer;
     ENDCHAR: '}';
     SEMICOLON: ';';
     COLON: ':';
+    RANGE_DOTS: '...';
+    VERTICAL_LINE: '|';
 
     SP: ' ' -> channel(HIDDEN);
     WS: [ \t\r\n\f]+ -> channel(HIDDEN);

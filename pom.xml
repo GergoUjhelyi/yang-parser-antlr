@@ -13,9 +13,11 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <antlr.plugin.version>4.13.2</antlr.plugin.version>
+        <lombok.plugin.version>1.18.42</lombok.plugin.version>
     </properties>
 
     <dependencies>
+        <!-- ANTLR -->
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
@@ -25,6 +27,12 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-maven-plugin</artifactId>
             <version>${antlr.plugin.version}</version>
+        </dependency>
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.plugin.version}</version>
         </dependency>
     </dependencies>
 
