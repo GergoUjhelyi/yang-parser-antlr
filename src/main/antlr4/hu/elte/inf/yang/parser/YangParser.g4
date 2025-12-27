@@ -11,6 +11,7 @@ import hu.elte.inf.yang.parser.definitions.YangModule;
 
 pr_YangFile:
     pr_YangModule?
+    pr_SubModule?
     EOF;
 
 pr_YangModule returns[YangModule yangModule]:
@@ -36,9 +37,23 @@ pr_YangModule returns[YangModule yangModule]:
 
 pr_YangModuleKeyword returns[String stringValue]:
     MODULE
-{
-    $stringValue = $MODULE.getText();
-};
+;
+
+pr_SubModule: // TODO: create submodule class
+    OPTSEP?
+    SUBMODULE
+    SEP?
+    i = pr_Identifier
+    OPTSEP?
+    pr_BeginChar
+    pr_SubModuleHeaderStatements
+    pr_LinkageStatements
+    pr_MetaStatements
+    pr_RevisionStatements
+    pr_BodyStatements
+    pr_EndChar
+    OPTSEP?
+;
 
 pr_ModuleHeaderStatements:
     (
@@ -48,6 +63,14 @@ pr_ModuleHeaderStatements:
         |
         pr_PrefixStatement
     )+
+;
+
+pr_SubModuleHeaderStatements:
+        (
+            pr_YangVersionStatement
+            |
+            pr_BelongsToStatement
+        )+
 ;
 
 pr_LinkageStatements:
@@ -96,6 +119,18 @@ pr_PrefixStatement:
     SEP?
     (pr_Identifier | pr_String) //TODO: save prefix value
     pr_StatementEnd
+;
+
+pr_BelongsToStatement:
+    BELONGS_TO
+    SEP?
+    (pr_Identifier | pr_String)
+    OPTSEP?
+    pr_BeginChar
+    pr_StatementSeparator
+    p = pr_PrefixStatement
+    pr_EndChar
+    pr_StatementSeparator
 ;
 
 pr_ImportStatement:
