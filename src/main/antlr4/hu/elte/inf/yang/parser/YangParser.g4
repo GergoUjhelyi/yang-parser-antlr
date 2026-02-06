@@ -6,7 +6,8 @@ tokenVocab=YangLexer;
 @header{
 import java.time.LocalDate;
 
-import hu.elte.inf.yang.parser.definitions.YangModule;
+import hu.elte.inf.yang.parser.model.definitions.YangModule;
+import hu.elte.inf.yang.parser.model.definitions.arguements.StatusArguement;
 }
 
 pr_YangFile:
@@ -97,6 +98,10 @@ pr_RevisionStatements:
 pr_BodyStatements:
     (
     pr_ExtensionStatement
+    |
+    pr_FeatureStatement
+    |
+    pr_IdentityStatement
     )*
 ;
 
@@ -250,7 +255,8 @@ pr_ExtensionStatement: //TODO: returns statement
             (
                 pr_ArgumentStatement
                 |
-                //TODO: status statement
+                pr_StatusStatement
+                |
                 pr_DescriptionStatement
                 |
                 pr_ReferenceStatement
@@ -288,6 +294,38 @@ pr_YinElementStatement: //TODO: returns statement
 pr_YinElementArguement: //TODO: returns boolean
     TRUE | FALSE;
 
+pr_IdentityStatement: //TODO: returns statement
+    IDENTITY
+    SEP?
+    id = pr_Identifier
+    OPTSEP?
+    (SEMICOLON
+    |
+    (pr_BeginChar
+     pr_StatementSeparator
+     (  pr_IfFeatureStatement
+        |
+        pr_BaseStatement
+        |
+        pr_StatusStatement
+        |
+        pr_DescriptionStatement
+        |
+        pr_ReferenceStatement
+     )*
+     pr_EndChar
+     )
+    )
+    pr_StatementSeparator
+;
+
+pr_BaseStatement: //TODO: returns statement
+    BASE
+    SEP?
+    (pr_String | pr_Identifier)
+    pr_StatementEnd
+;
+
 pr_FeatureStatement: //TODO: returns statement
     FEATURE
     SEP?
@@ -296,6 +334,15 @@ pr_FeatureStatement: //TODO: returns statement
     (SEMICOLON
     |
     (pr_BeginChar
+     pr_StatementSeparator
+     pr_IfFeatureStatement*
+     (
+     pr_StatusStatement
+     |
+     pr_DescriptionStatement
+     |
+     pr_ReferenceStatement)*
+     pr_EndChar
      pr_StatementSeparator
      )
      )
@@ -308,12 +355,39 @@ pr_StatusStatement:
     pr_StatementEnd
 ;
 
-pr_StatusArguement: //TODO: returns status
-    CURRENT
+pr_StatusArguement returns[StatusArguement status]
+@init {
+	$status = StatusArguement.CURRENT;
+}:
+    (
+    CURRENT { $status = StatusArguement.CURRENT; }
     |
-    OBSOLETE
+    OBSOLETE { $status = StatusArguement.OBSOLETE; }
     |
-    DEPRECATED
+    DEPRECATED { $status = StatusArguement.DEPRECATED; }
+    );
+
+pr_IfFeatureStatement:
+    IF_FEATURE
+    SEP?
+    pr_IfFeatureExpression
+    pr_StatementEnd
+;
+
+pr_IfFeatureExpression:
+    pr_IfFeatureTerm (SEP? OR SEP? pr_IfFeatureTerm)*
+;
+
+pr_IfFeatureTerm:
+    pr_IfFeatureFactor (SEP? AND SEP? pr_IfFeatureFactor)*
+;
+
+pr_IfFeatureFactor:
+ (NOT SEP? pr_IfFeatureFactor)
+ |
+ (LPAREN OPTSEP? pr_IfFeatureExpression OPTSEP? RPAREN)
+ |
+ pr_Identifier
 ;
 
 pr_UnknownStatement:
@@ -333,10 +407,18 @@ pr_UnknownStatement:
 
 pr_StatementSeparator:
     (WS | SP | pr_UnknownStatement)*
-    ;
+;
 
 pr_YangStatement:
     s1 = pr_YangVersionStatement
+;
+
+pr_RPCStatement:
+    RPC
+    SEP?
+    pr_Identifier
+    OPTSEP?
+    SEMI_COLON
 ;
 
 pr_StatementEnd:

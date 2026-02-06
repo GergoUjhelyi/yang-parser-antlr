@@ -110,6 +110,8 @@ lexer grammar YangLexer;
 
     BEGINCHAR: '{';
     ENDCHAR: '}';
+    LPAREN: '(';
+    RPAREN: ')';
     SEMICOLON: ';';
     COLON: ':';
     RANGE_DOTS: '...';
