@@ -102,6 +102,8 @@ pr_BodyStatements:
     pr_FeatureStatement
     |
     pr_IdentityStatement
+    |
+    pr_TypeDefStatement
     )*
 ;
 
@@ -418,7 +420,117 @@ pr_RPCStatement:
     SEP?
     pr_Identifier
     OPTSEP?
-    SEMI_COLON
+    SEMICOLON
+;
+
+pr_TypeDefStatement:
+    TYPEDEF
+    SEP?
+    (pr_Identifier | pr_String)
+    OPTSEP?
+    pr_BeginChar
+    pr_StatementSeparator
+    pr_TypeStatement
+    ( pr_UnitsStatement | pr_DefaultStatement |pr_StatusStatement | pr_DescriptionStatement | pr_ReferenceStatement)*
+    pr_EndChar
+    pr_StatementSeparator
+;
+
+pr_DefaultStatement:
+    DEFAULT
+    SEP?
+    pr_String
+    pr_StatementEnd
+;
+
+pr_TypeStatement:
+    TYPE
+    SEP?
+    pr_Identifier
+    OPTSEP?
+    (SEMICOLON |
+    pr_BeginChar
+    pr_StatementSeparator
+    (pr_TypeBodyStatements)*
+    pr_EndChar
+    )
+    pr_StatementSeparator
+;
+
+pr_TypeBodyStatements:
+    (
+        pr_NumericalRestrictions
+        |
+        pr_Decimal64Specification
+        |
+        pr_StringRestrictions
+    )
+;
+
+pr_NumericalRestrictions:
+    pr_RangeStatement+
+;
+
+pr_Decimal64Specification:
+ pr_FractionDigitsStatement  pr_RangeStatement?
+;
+
+pr_FractionDigitsStatement:
+    FRACTION_DIGITS
+    SEP?
+    pr_FractionDigitsArgStr
+    pr_StatementEnd
+;
+
+pr_FractionDigitsArgStr:
+    INTEGER_VALUE
+;
+
+pr_StringRestrictions:
+    pr_LengthStatement pr_PatternStatement*
+    |
+    pr_PatternStatement+
+;
+
+pr_LengthStatement:
+    LENGTH
+    SEP?
+    pr_LengthArguement
+    OPTSEP?
+    (SEMICOLON
+        |
+        (
+            pr_BeginChar
+            pr_StatementSeparator
+            (pr_ErrorMessageStatement | pr_ErrorAppTagStatement | pr_DescriptionStatement | pr_ReferenceStatement)*
+            pr_EndChar
+        )
+    )
+    pr_StatementSeparator
+;
+
+pr_PatternStatement:
+    PATTERN
+    SEP?
+    pr_String
+    OPTSEP?
+    (SEMICOLON
+    |
+    (
+        pr_BeginChar
+        pr_StatementSeparator
+        (pr_ModifierStatement | pr_ErrorMessageStatement | pr_ErrorAppTagStatement | pr_DescriptionStatement | pr_ReferenceStatement)*
+        pr_EndChar
+    )
+    )
+    pr_StatementSeparator
+;
+
+pr_ModifierStatement:
+    MODIFIER
+    SEP?
+    INVERT_MATCH
+    pr_StatementEnd
 ;
 
 pr_StatementEnd:
@@ -530,4 +642,25 @@ pr_RangePart:
 
 pr_RangeBoundary:
     MIN | MAX | INTEGER_VALUE | DECIMAL_VALUE
+;
+
+// Lengths
+
+
+pr_LengthArguement:
+    pr_LengthPart
+    (
+        OPTSEP?
+        VERTICAL_LINE
+        OPTSEP?
+        pr_LengthPart
+    )*
+;
+
+pr_LengthPart:
+    pr_LengthBoundary (OPTSEP? RANGE_DOTS OPTSEP? pr_LengthBoundary)?
+;
+
+pr_LengthBoundary:
+    MIN | MAX | INTEGER_VALUE
 ;

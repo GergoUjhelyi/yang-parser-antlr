@@ -89,32 +89,38 @@ lexer grammar YangLexer;
     AND: 'and';
     OR: 'or';
     NOT: 'not';
-
     YANG_VERSION_ARG: '1.1';
     /*-------------------- Core rules from RFC 5234 --------------------*/
     fragment OPTSEP: (WS | SP)*;
     fragment SEP: (WS | SP)+;
-    INTEGER_VALUE: '-'? NON_NEGATIVE_INTEGER_VALUE;
-    fragment NON_NEGATIVE_INTEGER_VALUE: '0' | POSITIVE_INTEGER_VALUE;
-    fragment POSITIVE_INTEGER_VALUE: NON_ZERO_DIGIT DIGIT*;
-    ZERO_INTEGER_VALUE: DIGIT+;
-    fragment DECIMAL_VALUE: INTEGER_VALUE '.' ZERO_INTEGER_VALUE;
-    fragment NON_ZERO_DIGIT: [1-9];
-    fragment DIGIT: [0-9];
+INTEGER_VALUE
+    : '-'? [0-9]+
+    ;
+
+DECIMAL_VALUE
+    : '-'? [0-9]+ '.' [0-9]+
+    ;
+
+fragment DIGIT
+    : [0-9]
+    ;
+
+fragment NON_ZERO_DIGIT
+    : [1-9]
+    ;
     DATE_ARG: DOUBLE_QUOTE? DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT DOUBLE_QUOTE?;
 
     IDENTIFIER: [A-Za-z_][A-Za-z0-9_.-]*;
     DOUBLE_QUOTE: '"';
     //YANG_CHAR: ~[\u0000-\u001F]; // placeholder: any non-control char TODO: revisit later
     DOUBLE_QUOTE_STRING: DOUBLE_QUOTE ( '\\' . | ~["\\] )*? DOUBLE_QUOTE;
-
     BEGINCHAR: '{';
     ENDCHAR: '}';
     LPAREN: '(';
     RPAREN: ')';
     SEMICOLON: ';';
     COLON: ':';
-    RANGE_DOTS: '...';
+    RANGE_DOTS: '..';
     VERTICAL_LINE: '|';
 
     SP: ' ' -> channel(HIDDEN);
